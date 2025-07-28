@@ -1,0 +1,3 @@
+(library
+ (name hangul)
+ (libraries uunf))
