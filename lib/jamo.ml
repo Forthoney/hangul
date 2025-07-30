@@ -6,17 +6,17 @@ module type CompatTable = sig
   val fin : Uchar.t
 end
 
-module type S = sig
+module type Cluster = sig
   type t
 
-  val validate : Uchar.t -> t option
+  val of_uchar : Uchar.t -> t option
   val to_compat : t -> Uchar.t
 end
 
-module Make (Compat : CompatTable) : S = struct
+module Make (Compat : CompatTable) : Cluster = struct
   type t = Uchar.t
 
-  let validate c = if c >= Compat.start && c <= Compat.fin then Some c else None
+  let of_uchar c = if c >= Compat.start && c <= Compat.fin then Some c else None
 
   let to_compat c =
     let idx = Uchar.to_int c - Uchar.to_int Compat.start in
@@ -50,13 +50,13 @@ module Jongseong = Make (JongseongTbl)
 type t = Cho of Choseong.t | Jung of Jungseong.t | Jong of Jongseong.t
 
 let of_uchar c =
-  match Choseong.validate c with
+  match Choseong.of_uchar c with
   | Some c -> Some (Cho c)
   | None -> (
-      match Jungseong.validate c with
+      match Jungseong.of_uchar c with
       | Some c -> Some (Jung c)
       | None -> (
-          match Jongseong.validate c with
+          match Jongseong.of_uchar c with
           | Some c -> Some (Jong c)
           | None -> None))
 
