@@ -1,5 +1,10 @@
-let decompose_aux ~ignore s =
+let bufferize seq s =
   let s = Uunf_string.normalize_utf_8 `NFD s in
+  let buf = String.length s |> Buffer.create in
+  let () = Seq.iter (Buffer.add_utf_8_uchar buf) (seq s) in
+  Buffer.contents buf
+
+let decompose_aux ~ignore s =
   let len = String.length s in
   let rec loop loc () =
     if loc >= len then Seq.Nil
@@ -16,20 +21,11 @@ let decompose_aux ~ignore s =
   in
   loop 0
 
-let decompose ~ignore s =
-  let len = String.length s in
-  (* Worst case scenario, a syllable with cho-, jung-, jongseong will undergo a 3x size blowup.
-     Not sure if this much allocation is needed though *)
-  let buf = Buffer.create (len * Jamo.byte_size) in
-  let () =
-    Seq.iter
-      (Fun.compose (Buffer.add_utf_8_uchar buf) Jamo.to_compat)
-      (decompose_aux ~ignore s)
-  in
-  Buffer.contents buf
+let decompose ~ignore =
+  Fun.compose (Seq.map Jamo.to_compat) (decompose_aux ~ignore) |> bufferize
 
 let extract_aux ~ignore f =
-  Fun.compose (Seq.filter_map f) (decompose_aux ~ignore)
+  Fun.compose (Seq.filter_map f) (decompose_aux ~ignore) |> bufferize
 
 let extract_choseong =
   extract_aux (function
