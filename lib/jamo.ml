@@ -10,6 +10,8 @@ module type Cluster = sig
   type t
 
   val of_uchar : Uchar.t -> t option
+  val to_uchar : t -> Uchar.t
+  val nth : int -> t
   val to_compat : t -> Uchar.t
 end
 
@@ -17,6 +19,13 @@ module Make (Compat : CompatTable) : Cluster = struct
   type t = Uchar.t
 
   let of_uchar c = if c >= Compat.start && c <= Compat.fin then Some c else None
+
+  let nth idx =
+    let code = idx + Uchar.to_int Compat.start in
+    if code <= Uchar.to_int Compat.fin then Uchar.of_int code
+    else failwith "invalid index"
+
+  let to_uchar v = v
 
   let to_compat c =
     let idx = Uchar.to_int c - Uchar.to_int Compat.start in
@@ -48,6 +57,11 @@ module Jungseong = Make (JungseongTbl)
 module Jongseong = Make (JongseongTbl)
 
 type t = Cho of Choseong.t | Jung of Jungseong.t | Jong of Jongseong.t
+
+let to_uchar = function
+  | Cho v -> Choseong.to_uchar v
+  | Jung v -> Jungseong.to_uchar v
+  | Jong v -> Jongseong.to_uchar v
 
 let of_uchar c =
   match Choseong.of_uchar c with

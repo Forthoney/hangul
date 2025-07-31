@@ -6,6 +6,8 @@ module type Cluster = sig
 
   (* try to create a member of this cluster from a Uchar *)
   val of_uchar : Uchar.t -> t option
+  val to_uchar : t -> Uchar.t
+  val nth : int -> t
 
   (* convert into an equivalent Hangul Compatibility Uchar *)
   val to_compat : t -> Uchar.t
@@ -18,4 +20,5 @@ module Jongseong : Cluster
 type t = Cho of Choseong.t | Jung of Jungseong.t | Jong of Jongseong.t
 
 val of_uchar : Uchar.t -> t option
+val to_uchar : t -> Uchar.t
 val to_compat : t -> Uchar.t
